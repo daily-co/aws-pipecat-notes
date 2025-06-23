@@ -29,10 +29,11 @@ class StrandsAgent:
 
     def __init__(self):
         # Launch AWS Location Service MCP Server and create a client object
+
         env = {"FASTMCP_LOG_LEVEL": "ERROR"}
+        env['AWS_ACCESS_KEY_ID']=os.getenv("AWS_ACCESS_KEY_ID")
         env['AWS_SECRET_ACCESS_KEY']=os.getenv("AWS_SECRET_ACCESS_KEY")
-        env['AWS_ACCESS_KEY_ID']=access_key_id=os.getenv("AWS_ACCESS_KEY_ID")
-        env['AWS_REGION']=os.getenv("AWS_REGION")
+        env['AWS_REGION']=os.getenv("AWS_REGION") or "us-east-1"
 
         self.aws_location_srv_client = MCPClient(lambda: stdio_client(
             StdioServerParameters(
@@ -40,22 +41,26 @@ class StrandsAgent:
                 args=["awslabs.aws-location-mcp-server@latest"],
                 env=env)
             ))
+
+        # Initialize MCP client context
         self._server_context = self.aws_location_srv_client.__enter__()
         self.aws_location_srv_tools = self.aws_location_srv_client.list_tools_sync()
 
         session = boto3.Session(
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name='us-east-1'
+            aws_access_key_id=env['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=env['AWS_SECRET_ACCESS_KEY'],
+            region_name=env['AWS_REGION']
         )
+
         # Specify Bedrock LLM for the Agent
         bedrock_model = BedrockModel(
+            # model_id can be found in `model catalog`
             model_id="amazon.nova-lite-v1:0",
             boto_session=session
         )
+
         # Create a Strands Agent
-        tools = self.aws_location_srv_tools
-        tools.append(weather)
+        tools = self.aws_location_srv_tools.append(weather)
         self.agent = Agent(
             tools=tools, 
             model=bedrock_model,
