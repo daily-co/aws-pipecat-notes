@@ -1,0 +1,10 @@
+boto3
+fastapi
+pipecat-ai[aws-nova-sonic,silero,webrtc]==0.0.71
+pipecat-ai-small-webrtc-prebuilt
+python-dotenv
+requests
+strands-agents
+strands-agents-tools
+uv
+uvicorn
