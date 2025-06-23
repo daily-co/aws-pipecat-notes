@@ -65,7 +65,7 @@ query_function = FunctionSchema(
 # Create tools schema
 tools = ToolsSchema(standard_tools=[query_function])
 
-async def run_bot(webrtc_connection: SmallWebRTCConnection, _: argparse.Namespace):
+async def run_example(webrtc_connection: SmallWebRTCConnection, _: argparse.Namespace):
     logger.info(f"Starting bot with Strands agent integration")
 
     # Initialize the SmallWebRTCTransport with the connection
@@ -79,7 +79,7 @@ async def run_bot(webrtc_connection: SmallWebRTCConnection, _: argparse.Namespac
             vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.8)),
         ),
     )
-    
+
     # Initialize services
     llm = AWSNovaSonicLLMService(
         secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
@@ -113,7 +113,7 @@ async def run_bot(webrtc_connection: SmallWebRTCConnection, _: argparse.Namespac
         tools=tools,
     )
     context_aggregator = llm.create_context_aggregator(context)
-    
+
     # Build the pipeline
     pipeline = Pipeline(
         [
@@ -148,6 +148,7 @@ async def run_bot(webrtc_connection: SmallWebRTCConnection, _: argparse.Namespac
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):
         logger.info(f"Client disconnected")
+        await task.cancel()
 
     @transport.event_handler("on_client_closed")
     async def on_client_closed(transport, client):
