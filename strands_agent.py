@@ -60,7 +60,8 @@ class StrandsAgent:
         )
 
         # Create a Strands Agent
-        tools = self.aws_location_srv_tools.append(weather)
+        tools = self.aws_location_srv_tools
+        tools.append(weather)
         self.agent = Agent(
             tools=tools, 
             model=bedrock_model,
